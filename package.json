@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "electron-packager . attendance-safety-manager --platform=win32 --arch=x64 --overwrite --icon=icon.ico --out=release --ignore=data --ignore=output"
   },
   "devDependencies": {
-    "electron": "^28.3.3"
+    "electron": "^28.3.3",
+    "electron-packager": "^17.1.2"
   }
 }
