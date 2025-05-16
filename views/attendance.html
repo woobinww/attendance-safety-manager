@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>영상의학과 근태 기록</title>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1a1b26;
+      color: #c0caf5;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      padding: 1rem;
+      text-align: center;
+      background-color: #16161e;
+      margin: 0;
+    }
+    .container {
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+    .calendar-section {
+      width: 70%;
+      padding: 1rem;
+      box-sizing: border-box;
+      overflow-y: auto;
+      border-right: 1px solid #3b4261;
+    }
+    .calendar-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 1rem;
+    }
+    .calendar-controls select,
+    .calendar-controls button {
+      background-color: #1a1b26;
+      color: #c0caf5;
+      border: 1px solid #3b4261;
+      padding: 5px 10px;
+      font-size: 0.9rem;
+    }
+    .calendar-controls button:hover {
+      background-color: #7aa2f7;
+      color: #1a1b26;
+    }
+    .calendar-controls label {
+      margin-right: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #3b4261;
+      padding: 0.5rem;
+      vertical-align: top;
+      font-size: 0.85rem;
+      position: relative;
+    }
+    th {
+      background-color: #2f334d;
+      color: #7aa2f7;
+    }
+    td:hover {
+      background-color: #414868;
+      cursor: pointer;
+    }
+    .day-number {
+      font-weight: bold;
+      color: #9ece6a;
+    }
+    .record {
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+    .form-panel {
+      width: 30%;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+    input, select, textarea {
+      pointer-events: auto;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 6px;
+      background-color: #1a1b26;
+      border: 1px solid #3b4261;
+      color: #c0caf5;
+      box-sizing: border-box;
+    }
+    button[type="submit"] {
+      width: 100%;
+      padding: 10px;
+      background-color: #7aa2f7;
+      color: #1a1b26;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover {
+      background-color: #9ece6a;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .selected-cell {
+      background-color: #7aa2f7 !important;
+      color: #1a1b26 !important;
+    }
+    #resetformBtn {
+      margin-top: 8px;
+      padding: 10px;
+      background-color: #565f89;
+      color: #ffffff;
+      border: none;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #resetFormBtn:hover {
+      background-color: #7aa2f7;
+      color: #1a1b26;
+    }
+    .saturday {
+      background-color: #2b3050 !important; /* 토요일 색상 */
+    }
+    .saturday:hover {
+      background-color: #343a61 !important;
+    }
+    .saturday.selected-cell {
+      background-color: #3f467a !important;
+      outline: 2px solid #7aa2f7;
+      outline-offset: -2px;
+      color: #c0caf5 !important;
+    }
+    .sunday {
+      background-color: #402828 !important; /* 일요일 색상 */
+    }
+    .sunday:hover {
+      background-color: #593aa34 !important;
+    }
+    .sunday.selected-cell {
+      background-color: #704841 !important;
+      outline: 2px solid #f7768e;
+      outline-offset: 2px;
+      color: #c0caf5 !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>📆 영상의학과 근태 기록</h1>
+  
+  <!-- 네비게이션 버튼 -->
+  <div class="top-nav" style="display: flex; justify-content: flex-and; padding: 0.5rem 1rem;">
+    <button id="goSafetyBtn" style="
+      background-color: #7aa2f7;
+      color: #1a1b26;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    ">
+      🔒 방사선안전관리
+    </button>
+  </div>
+
+
+
+  <div class="container">
+    <!-- 좌측: 달력 영역 -->
+    <div class="calendar-section">
+      <!-- 버튼과 필터를 한 줄로 중앙 정렬 -->
+      <div class="calendar-controls">
+        <button id="prevMonthBtn">◀ 이전달</button>
+
+        <div class="filter-group">
+          <label for="filterByName">직원 선택</label>
+          <select id="filterByName">
+            <option value="">전체 직원</option>
+          </select>
+        </div>
+
+        <button id="btnExportExcel">📁 현재월 엑셀 생성</button>
+
+        <button id="nextMonthBtn">다음달 ▶</button>
+      </div>
+      <div class="calendar" id="calendarArea">
+        <!-- JavaScript로 달력 렌더링됨 -->
+      </div>
+    </div>
+
+
+    <!-- 우측: 입력 폼 -->
+    <div class="form-panel">
+      <h3>기록 입력</h3>
+      <form id="attendanceForm">
+        <label>날짜</label>
+        <input type="date" name="date" required />
+
+        <label>직원 이름</label>
+        <select name="name" id="employeeSelect" required>
+          <option value="">직원 선택</option>
+          <!-- js에서 자동 채우기 -->
+        </select>
+
+        <label>OT 시간</label>
+        <input type="number" name="ot" step="0.5" placeholder="예: 0.5, 1, 1.5" />
+
+        <label>야간 OT</label>
+        <input type="number" name="nightOt" step="0.5" placeholder="예: 0.5, 1, 1.5" />
+
+        <label>휴일 OT</label>
+        <input type="number" name="holidayOt" step="0.5" placeholder="예: 0.5, 1, 1.5" />
+
+        <label>탄력 OT</label>
+        <input type="number" name="flexOt" step="0.5" placeholder="예: 0.5, 1, 1.5" />
+
+        <label>연차 / 반차</label>
+        <select name="off">
+          <option value="">-</option>
+          <option value="연차">연차</option>
+          <option value="오전반차">오전반차</option>
+          <option value="오후반차">오후반차</option>
+        </select>
+
+        <label>비고</label>
+        <textarea name="note" rows="2"></textarea>
+
+        <button type="submit">💾 저장</button>
+      </form>
+      <br>
+      <button type="button" id="resetFormBtn">🧹 초기화</button>
+    </div>
+  </div>
+
+  <script src="../src/attendance.js"></script>
+</body>
+</html>
