@@ -165,11 +165,12 @@ function attachRowEventHandlers() {
 
   tableBody.querySelectorAll('.del-btn').forEach((btn, index) => {
     btn.addEventListener('click', () => {
+      const index = parseInt(btn.dataset.index);
       const empName = employees[index].name;
       if (confirm(`${empName} 님의 정보를 삭제하시겠습니까?`)) {
         employees.splice(index, 1);
         saveEmployeesCSV();
-        renderEmployees(employees); // 삭제 후 재렌더링
+        applyFilters(); // 삭제 후 재렌더링
       }
     });
   });
