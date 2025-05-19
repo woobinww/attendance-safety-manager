@@ -95,22 +95,58 @@ function renderCalendar(year, month, records) {
     // 날짜 클릭 이벤트: 폼 채우기
     cell.addEventListener('click', () => {
       const form = document.getElementById('attendanceForm');
+      const selectedName = document.getElementById('filterByName').value;
+
       form.date.value = dateStr;
-      form.name.value = '';
-      form.ot.value = '';
-      form.nightOt.value = '';
-      form.holidayOt.value = '';
-      form.flexOt.value = '';
-      form.off.value = '';
-      form.note.value = '';
+
+      if (selectedName) {
+        // 직원 선택을 자동 지정
+        form.name.value = selectedName;
+        
+        // 기록 불러오기
+        const record = attendanceRecords.find(r => r.date === dateStr && r.name === selectedName);
+        if (record) {
+          form.ot.value = record.ot || '';
+          form.nightOt.value = record.nightOt || '';
+          form.holidayOt.value = record.holidayOt || '';
+          form.flexOt.value = record.flexOt || '';
+          form.off.value = record.off || '';
+          form.note.value = record.note || '';
+        } else {
+          // 기록이 없으면 폼 초기화 (날짜 + 이름만 유지)
+          form.ot.value = '';
+          form.nightOt.value = '';
+          form.holidayOt.value = '';
+          form.flexOt.value = '';
+          form.off.value = '';
+          form.note.value = '';
+        }
+
+        // 포커스를 OT 필드로 이동 
+        form.ot.focus();
+      } else {
+        // 직원이 선택되지 않은 경우에는 이름 필드도 초기화
+        form.name.value = '';
+        form.ot.value = '';
+        form.nightOt.value = '';
+        form.holidayOt.value = '';
+        form.flexOt.value = '';
+        form.off.value = '';
+        form.note.value = '';
+
+        form.name.focus();
+      }
+
+
 
       // 이전 선택 제거
       document.querySelectorAll('.calendar td').forEach(td => td.classList.remove('selected-cell'));
-      // 현재 셀 강조
-      cell.classList.add('selected-cell');
+      // 선택된 셀 강조 (기존 강조 제거 후 추가)
+      document.querySelectorAll('.calendar td.selected').forEach(td => td.classList.remove('selected'));
+      cell.classList.add('selected');
 
       // 직원 드롭다운에 포커스 이동
-      form.name.focus();
+      // form.name.focus();
     });
 
     row.appendChild(cell);
