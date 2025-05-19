@@ -173,12 +173,47 @@ function populateEmployeeFilterDropdown() {
   filterSelect.innerHTML = '<option value="">전체 직원</option>'; // 초기화
 
   const names = [...new Set(attendanceRecords.map(r => r.name))];
-  names.sort().forEach(name => {
+  names.forEach(name => {
     const opt = document.createElement('option');
     opt.value = name;
     opt.textContent = name;
     filterSelect.appendChild(opt);
   });
+}
+
+// 직원 근태 요약 렌더링
+function renderSummaryFor(name, year, month) {
+  if (!name) {
+    document.getElementById('summaryContent').innerHTML = '';
+    return;
+  }
+
+  const filtered = attendanceRecords.filter(r => {
+    return r.name === name && new Date(r.date).getFullYear() === year && (new Date(r.date).getMonth() + 1) === month;
+  });
+
+  let totalOT = 0;
+  let totalNight = 0;
+  let totalHoliday = 0;
+  let totalFlex = 0;
+
+  filtered.forEach(r => {
+    totalOT += parseFloat(r.ot) || 0;
+    totalNight += parseFloat(r.nightOt) || 0;
+    totalHoliday += parseFloat(r.holidayOt) || 0;
+    totalFlex += parseFloat(r.flexOt) || 0;
+  });
+
+  const html = `
+    <ul style="list-style: none; padding-left: 0;">
+      <li><strong>직원 이름:</strong> ${name}</li>
+      <li><strong>총 OT:</strong> ${(totalOT + totalHoliday).toFixed(1)}시간 (기본 OT ${totalOT.toFixed(1)} + 휴일 OT ${totalHoliday.toFixed(1)})</li>
+      <li><strong>총 야간 OT:</strong> ${totalNight.toFixed(1)}시간</li>
+      <li><strong>총 탄력 OT:</strong> ${totalFlex.toFixed(1)}시간</li>
+    </ul>
+  `;
+
+  document.getElementById('summaryContent').innerHTML = html;
 }
 
 
@@ -204,7 +239,12 @@ document.addEventListener('DOMContentLoaded', () => {
       currentMonth = 12;
       currentYear -= 1;
     }
-    renderCalendar(currentYear, currentMonth, attendanceRecords);
+    const selectedName = document.getElementById('filterByName').value;
+    const filtered = selectedName
+      ? attendanceRecords.filter(r => r.name === selectedName)
+      : attendanceRecords;
+    renderCalendar(currentYear, currentMonth, filtered);
+    renderSummaryFor(selectedName, currentYear, currentMonth);
   });
 
   document.getElementById('nextMonthBtn').addEventListener('click', () => {
@@ -213,7 +253,12 @@ document.addEventListener('DOMContentLoaded', () => {
       currentMonth = 1;
       currentYear += 1;
     }
-    renderCalendar(currentYear, currentMonth, attendanceRecords);
+    const selectedName = document.getElementById('filterByName').value;
+    const filtered = selectedName
+      ? attendanceRecords.filter(r => r.name === selectedName)
+      : attendanceRecords;
+    renderCalendar(currentYear, currentMonth, filtered);
+    renderSummaryFor(selectedName, currentYear, currentMonth);
   });
 
   // 5. select 변경 이벤트 등록
@@ -223,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ? attendanceRecords.filter(r => r.name === selectedName)
       : attendanceRecords;
     renderCalendar(currentYear, currentMonth, filtered);
+    renderSummaryFor(selectedName, currentYear, currentMonth);  // 👈 요약 호출
   });
 
   // 6. 직원 이름 선택 시, 해당 날짜의 데이터 입력
@@ -243,6 +289,10 @@ document.addEventListener('DOMContentLoaded', () => {
     form.off.value = existing?.off || '';
     form.note.value = existing?.note || '';
   });
+
+
+
+
 
   // 7. reset버튼
   document.getElementById('resetFormBtn').addEventListener('click', () => {
