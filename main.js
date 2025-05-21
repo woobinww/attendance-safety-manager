@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const { runPythonScript } = require('./src/python_bridge.js');
+const { runPythonExecutable } = require('./src/python_bridge.js');
 
 let mainWindow, employeeWindow;
 

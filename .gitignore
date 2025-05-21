@@ -7,6 +7,9 @@ output/
 .DS_Store
 *.log
 
+// 압축파일 관련
+*.zip
+
 # 환경 설정 파일
 .env
 *.local

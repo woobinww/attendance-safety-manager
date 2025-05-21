@@ -1,21 +1,22 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
-function runPythonScript(scriptName, args = [], callback) {
-  const scriptPath = path.join(__dirname, '../python', scriptName);
-  const python = spawn('python', [scriptPath, ...args]);
+function runPythonExecutable(exeName, args = [], callback) {
+  // exe 파일은 python_dist 디렉토리에 위치
+  const exePath = path.join(__dirname, '../python_dist', exeName);
+  const subprocess = spawn(exePath, args);
 
   let stdout = '', stderr = '';
-  python.stdout.on('data', data => { stdout += data.toString(); });
-  python.stderr.on('data', data => { stderr += data.toString(); });
+  subprocess.stdout.on('data', data => { stdout += data.toString(); });
+  subprocess.stderr.on('data', data => { stderr += data.toString(); });
 
-  python.on('close', code => {
+  subprocess.on('close', code => {
     if (code === 0) {
       callback(null, stdout.trim());
     } else {
-      callback(new Error(`Python error: ${stderr.trim()}`), null);
+      callback(new Error(`Executable error (code ${code}): ${stderr.trim()}`), null);
     }
   });
 }
 
-module.exports = { runPythonScript };
+module.exports = { runPythonExecutable };

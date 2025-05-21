@@ -373,7 +373,15 @@ document.addEventListener('DOMContentLoaded', () => {
     saveAttendance();
   
     form.reset();
-    renderCalendar(currentYear, currentMonth, attendanceRecords);
+
+    const employeeFilter = document.getElementById('employeeSelect').value;
+
+    if (employeeFilter === "") {
+      renderCalendar(currentYear, currentMonth, attendanceRecords);
+    } else {
+      const filteredRecords = attendanceRecords.filter(r => r.name === employeeFilter);
+      renderCalendar(currentYear, currentMonth, filteredRecords);
+    }
   });
 
   // 10. safety.html 연결

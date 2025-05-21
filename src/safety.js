@@ -126,7 +126,7 @@ function applyFilters() {
 }
 
 // 이후 수정/삭제/저장/버튼 실행은 동일 로직으로 연결
-// window.api.writeCSV(csvContent), window.api.runPythonScript(...) 등 preload.js에서 추가 정의 필요
+// window.api.writeCSV(csvContent), window.api.runPythonExecutable(...) 등 preload.js에서 추가 정의 필요
 
 
 let editIndex = null; // 수정 중인 직원의 배열 인덱스
@@ -253,7 +253,7 @@ document.getElementById('btnRegiWorker').addEventListener('click', () => {
     window.api.getPath('regiTemplate'),
     window.api.getPath('output')
   ];
-  window.api.runPythonScript('regi_worker.py', args, (err, result) => {
+  window.api.runPythonExecutable('regi_worker.exe', args, (err, result) => {
     if (err) return alert(`실패 ${err.message}`);
     alert('신고서 작성 완료.');
   });
@@ -274,7 +274,7 @@ document.getElementById('btnTestWorker').addEventListener('click', () => {
     window.api.getPath('testTemplate'),
     window.api.getPath('output')
   ];
-  window.api.runPythonScript('test_worker.py', args, (err, result) => {
+  window.api.runPythonExecutable('test_worker.exe', args, (err, result) => {
     if (err) return alert(`실패 ${err.message}`);
     alert('방사선관계종사자건강진단표 작성 완료.');
   });
@@ -292,7 +292,7 @@ document.getElementById('btnTldApp').addEventListener('click', () => {
     window.api.getPath('tldTemplate'),
     window.api.getPath('output')
   ];
-  window.api.runPythonScript('tld_app.py', args, (err, result) => {
+  window.api.runPythonExecutable('tld_app.exe', args, (err, result) => {
     if (err) return alert(`실패 ${err.message}`);
     alert('TLD신청서 작성 완료.');
   });

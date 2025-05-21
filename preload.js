@@ -36,6 +36,8 @@ filesToEnsure.forEach(file => {
 
 
 
+
+
 // exposeInMainWorld 이하에 API 정의
 contextBridge.exposeInMainWorld('api', {
   readCSV: () => {
@@ -54,6 +56,7 @@ contextBridge.exposeInMainWorld('api', {
     const csvPath = path.join(__dirname, 'data/employees.csv');
     fs.writeFileSync(csvPath, content, 'utf-8');
   },
+  // .py 파이썬 코드 실행
   runPythonScript: (scriptName, args, callback) => {
     const py = spawn('python', [path.join(__dirname, 'python', scriptName), ...args]);
     let output = '';
@@ -67,6 +70,23 @@ contextBridge.exposeInMainWorld('api', {
     });
 
     py.on('close', (code) => {
+      if (code !== 0) return callback(new Error(`Python 종료 코드 ${code}`));
+      callback(null, output.trim());
+    });
+  },
+  runPythonExecutable: (exeName, args, callback) => {
+    const subprocess = spawn(path.join(__dirname, 'python_dist', exeName), args);
+    let output = '';
+
+    subprocess.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    subprocess.stderr.on('data', (data) => {
+      console.err("Python stderr:", data.toString());
+    });
+
+    subprocess.on('close', (code) => {
       if (code !== 0) return callback(new Error(`Python 종료 코드 ${code}`));
       callback(null, output.trim());
     });
@@ -116,14 +136,14 @@ contextBridge.exposeInMainWorld('api', {
       // .sort(); // 이름순 정렬 
   },
   runAttendanceToExcel: (month) => {
-    const script = path.join(__dirname, 'python', 'attendanceToExcel.py');
+    const exeName = path.join(__dirname, 'python_dist', 'attendanceToExcel.exe');
     const csvPath = path.join(__dirname, 'data', 'attendance.csv');
     const templatePath = path.join(__dirname, 'templates/근무현황_부서명(2025)_template.xlsx');
     const outputDir = path.join(__dirname, 'output')
 
     const args = [csvPath, templatePath, outputDir, month]; // 예: '2025-05'
 
-    const py = spawn('python', [script, ...args]);
+    const py = spawn(exeName, args);
     py.stdout.on('data', (data) => console.log('stdout:', data.toString()));
     py.stderr.on('data', (data) => console.error('stderr:', data.toString()));
     py.on('close', (code) => {
