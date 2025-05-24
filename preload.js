@@ -1,60 +1,37 @@
 // preload.js
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, shell } = require('electron');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// 생성할 파일 경로
-const filesToEnsure = [
-  {
-    path: path.join(__dirname, 'data/employees.csv'),
-    header: "이름,부서,주민등록번호,직종,면허번호,입사일,퇴사일,배치전검사,변경신고,TLD신청"
-  },
-  {
-    path: path.join(__dirname, 'data/attendance.csv'),
-    header: "date,name,ot,nightOt,holidayOt,flexOt,off,note"
-  }
-];
-
-// 초기 실행 시 디렉토리 확인 및 생성 
-const dirs = ['data', 'output'];
-dirs.forEach(dir => {
-  const fullPath = path.join(__dirname, dir);
-  if (!fs.existsSync(fullPath)) {
-    fs.mkdirSync(fullPath);
-    console.log(`📁 '${dir}' 폴더를 자동 생성했습니다.`);
+// CLI 인자에서 userDataPath 추출
+let userDataPath = '';
+process.argv.forEach(arg => {
+  if (arg.startsWith('--userDataPath=')) {
+    userDataPath = arg.replace('--userDataPath=', '');
   }
 });
 
-// 파일 생성
-filesToEnsure.forEach(file => {
-  if (!fs.existsSync(file.path)) {
-    fs.writeFileSync(file.path, file.header + "\n", 'utf-8');
-    console.log(`📄 파일 생성됨: ${path.basename(file.path)}`);
-  }
-});
-
-
-
+const dataDir = path.join(userDataPath, 'data');
+const outputDir = path.join(userDataPath, 'output');
+const templateDir = path.join(process.resourcesPath, 'templates');
 
 
 // exposeInMainWorld 이하에 API 정의
 contextBridge.exposeInMainWorld('api', {
   readCSV: () => {
-    const csvPath = path.join(__dirname, 'data/employees.csv');
-    return fs.readFileSync(csvPath, 'utf-8');
+    const file = path.join(dataDir, 'employees.csv');
+    return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : '';
   },
   getPath: (type) => {
-    const base = __dirname;
-    if (type == 'csv') return path.join(base, 'data/employees.csv');
-    if (type == 'output') return path.join(base, 'output');
-    if (type == 'regiTemplate') return path.join(base, 'templates', '방사선관계종사자신고서_template.hwp');
-    if (type == 'testTemplate') return path.join(base, 'templates', '방사선관계종사자건강진단표_template.hwp');
-    if (type == 'tldTemplate') return path.join(base, 'templates', 'TLD종사자신상변동사항신청서_template.hwp');
+    if (type == 'csv') return path.join(dataDir, 'employees.csv');
+    if (type == 'output') return outputDir;
+    if (type == 'regiTemplate') return path.join(templateDir, 'rad_regi_template.hwp');
+    if (type == 'testTemplate') return path.join(templateDir, 'rad_test_template.hwp');
+    if (type == 'tldTemplate') return path.join(templateDir, 'TLD_template.hwp');
   },
   saveCSV: (content) => {
-    const csvPath = path.join(__dirname, 'data/employees.csv');
-    fs.writeFileSync(csvPath, content, 'utf-8');
+    fs.writeFileSync(path.join(dataDir, 'employees.csv'), content, 'utf-8');
   },
   // .py 파이썬 코드 실행
   runPythonScript: (scriptName, args, callback) => {
@@ -75,7 +52,7 @@ contextBridge.exposeInMainWorld('api', {
     });
   },
   runPythonExecutable: (exeName, args, callback) => {
-    const subprocess = spawn(path.join(__dirname, 'python_dist', exeName), args);
+    const subprocess = spawn(path.join(process.resourcesPath, 'python_dist', exeName), args);
     let output = '';
 
     subprocess.stdout.on('data', (data) => {
@@ -92,16 +69,16 @@ contextBridge.exposeInMainWorld('api', {
     });
   },
   readAttendanceCSV: () => {
-    const csvPath = path.join(__dirname, 'data/attendance.csv');
-    if (!fs.existsSync(csvPath)) return ''; // 파일 없으면 빈 문자열
-    return fs.readFileSync(csvPath, 'utf-8');
+    const file = path.join(dataDir, 'attendance.csv');
+    if (!fs.existsSync(file)) return ''; // 파일 없으면 빈 문자열
+    return fs.readFileSync(file, 'utf-8');
   },
   saveAttendanceCSV: (content) => {
-    const csvPath = path.join(__dirname, 'data/attendance.csv');
-    fs.writeFileSync(csvPath, content, 'utf-8');
+    const file = path.join(dataDir, 'attendance.csv');
+    fs.writeFileSync(file, content, 'utf-8');
   },
   getEmployeeNames: () => {
-    const csvPath = path.join(__dirname, 'data/employees.csv');
+    const csvPath = path.join(dataDir, 'employees.csv');
     const content = fs.readFileSync(csvPath, 'utf-8');
     const lines = content.trim().split('\n');
     if (lines.length < 2) return []; // 데이터 없음 처리
@@ -136,10 +113,9 @@ contextBridge.exposeInMainWorld('api', {
       // .sort(); // 이름순 정렬 
   },
   runAttendanceToExcel: (month) => {
-    const exeName = path.join(__dirname, 'python_dist', 'attendanceToExcel.exe');
-    const csvPath = path.join(__dirname, 'data', 'attendance.csv');
-    const templatePath = path.join(__dirname, 'templates/근무현황_부서명(2025)_template.xlsx');
-    const outputDir = path.join(__dirname, 'output')
+    const exeName = path.join(process.resourcesPath, 'python_dist', 'attendanceToExcel.exe');
+    const csvPath = path.join(dataDir, 'attendance.csv');
+    const templatePath = path.join(templateDir, 'attendance(2025)_template.xlsx');
 
     const args = [csvPath, templatePath, outputDir, month]; // 예: '2025-05'
 
@@ -153,5 +129,8 @@ contextBridge.exposeInMainWorld('api', {
         console.error("오류 발생, 종료코드:", code);
       }
     });
+  },
+  openFolder: (folderPath) => {
+    shell.openPath(folderPath);
   }
 });

@@ -344,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnExportExcel').addEventListener('click', () => {
     const monthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
     window.api.runAttendanceToExcel(monthStr);
+    window.api.openFolder(window.api.getPath('output'));
   });
 
   // 9. 폼 제출
