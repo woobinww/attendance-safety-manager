@@ -257,6 +257,7 @@ document.getElementById('btnRegiWorker').addEventListener('click', () => {
     if (err) return alert(`실패 ${err.message}`);
     alert('신고서 작성 완료.');
   });
+  window.api.openFolder(window.api.getPath('output'));
 });
 
 // 방사선관계종사자건강진단표
@@ -278,6 +279,7 @@ document.getElementById('btnTestWorker').addEventListener('click', () => {
     if (err) return alert(`실패 ${err.message}`);
     alert('방사선관계종사자건강진단표 작성 완료.');
   });
+  window.api.openFolder(window.api.getPath('output'));
 });
 
 
@@ -296,6 +298,7 @@ document.getElementById('btnTldApp').addEventListener('click', () => {
     if (err) return alert(`실패 ${err.message}`);
     alert('TLD신청서 작성 완료.');
   });
+  window.api.openFolder(window.api.getPath('output'));
 });
 
 
