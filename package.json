@@ -51,5 +51,8 @@
       "createStartMenuShortcut": true,
       "shortcutName": "종합인사관리"
     }
+  },
+  "dependencies": {
+    "electron-log": "^5.4.0"
   }
 }

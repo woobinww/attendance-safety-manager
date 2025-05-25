@@ -1,3 +1,11 @@
+// 전역 오류 핸들러
+window.onerror = function(message, source, lineno, colno, error) {
+  if (window.logger) {
+    window.logger.error(`${message} at ${source}:${lineno}:${colno}`);
+  }
+};
+
+
 // 날짜 → YYYY-MM-DD 형식
 function formatDate(d) {
   return d.toISOString().split('T')[0];

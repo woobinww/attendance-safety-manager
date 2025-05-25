@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer, shell } = require('electron');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const log = require('electron-log');
 
 // CLI 인자에서 userDataPath 추출
 let userDataPath = '';
@@ -14,7 +15,21 @@ process.argv.forEach(arg => {
 
 const dataDir = path.join(userDataPath, 'data');
 const outputDir = path.join(userDataPath, 'output');
-const templateDir = path.join(process.resourcesPath, 'templates');
+
+// 오류 전달 코드
+contextBridge.exposeInMainWorld('logger', {
+  error: (msg) => log.error(`❗ 렌더러 오류 at ${new Date().toISOString()} ->`, msg)
+});
+
+// 개발/배포 판별 (process.resourcesPath가 'node_modules' 포함 여부로 판단)
+const isDev = process.resourcesPath.includes('node_modules');
+
+const pythonDistPath = isDev 
+  ? path.join(__dirname, 'python_dist') 
+  : path.join(process.resourcesPath, 'python_dist');
+const templateDir = isDev 
+  ? path.join(__dirname, 'templates')
+  : path.join(process.resourcesPath, 'templates');
 
 
 // exposeInMainWorld 이하에 API 정의
@@ -52,7 +67,8 @@ contextBridge.exposeInMainWorld('api', {
     });
   },
   runPythonExecutable: (exeName, args, callback) => {
-    const subprocess = spawn(path.join(process.resourcesPath, 'python_dist', exeName), args);
+    const exePath = path.joins(pythonDistPath, exeName);
+    const subprocess = spawn(exePath, args);
     let output = '';
 
     subprocess.stdout.on('data', (data) => {
@@ -113,7 +129,7 @@ contextBridge.exposeInMainWorld('api', {
       // .sort(); // 이름순 정렬 
   },
   runAttendanceToExcel: (month) => {
-    const exeName = path.join(process.resourcesPath, 'python_dist', 'attendanceToExcel.exe');
+    const exeName = path.join(pythonDistPath, 'attendanceToExcel.exe');
     const csvPath = path.join(dataDir, 'attendance.csv');
     const templatePath = path.join(templateDir, 'attendance(2025)_template.xlsx');
 

@@ -1,3 +1,10 @@
+// 전역 오류 핸들러
+window.onerror = function(message, source, lineno, colno, error) {
+  if (window.logger) {
+    window.logger.error(`${message} at ${source}:${lineno}:${colno}`);
+  }
+};
+
 // renderer.js (Node.js require 제거 + preload 기반 수정 버전)
 
 let employees = [];

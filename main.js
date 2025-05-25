@@ -2,8 +2,20 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { runPythonExecutable } = require('./src/python_bridge.js');
+const log = require('electron-log');
 
 let mainWindow, employeeWindow;
+
+process.on('uncaughtException', (error) =>{
+  log.error(`❗ UncaughtException at ${new Date().toISOString()}\n`, error);
+});
+if (!app.isPackaged) {
+  log.transports.console.level = 'info'; // 개발 중일 때 콘솔에 출력 
+} else {
+  log.transports.console.level = false; //  배포 버전 콘솔 로그 비활성화
+}
+log.transports.file.level = 'error'; // error만 파일 기록
+log.transports.file.maxSize = 5 * 1024 * 1024; // 5MB 까지로 용량 제한
 
 function initializeUserData() {
   const userDataDir = app.getPath('userData');
