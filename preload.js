@@ -39,11 +39,14 @@ contextBridge.exposeInMainWorld('api', {
     return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : '';
   },
   getPath: (type) => {
-    if (type == 'csv') return path.join(dataDir, 'employees.csv');
-    if (type == 'output') return outputDir;
-    if (type == 'regiTemplate') return path.join(templateDir, 'rad_regi_template.hwp');
-    if (type == 'testTemplate') return path.join(templateDir, 'rad_test_template.hwp');
-    if (type == 'tldTemplate') return path.join(templateDir, 'TLD_template.hwp');
+    switch(type) {
+      case 'csv' : return path.join(dataDir, 'employees.csv');
+      case 'output' : return outputDir;
+      case 'regiTemplate' : return path.join(templateDir, 'rad_regi_template.hwp');
+      case 'testTemplate' : return path.join(templateDir, 'rad_test_template.hwp');
+      case 'tldTemplate' : return path.join(templateDir, 'TLD_template.hwp');
+      default: throw new Error(`Unknown path type: ${type}`);
+    }
   },
   saveCSV: (content) => {
     fs.writeFileSync(path.join(dataDir, 'employees.csv'), content, 'utf-8');
@@ -67,7 +70,7 @@ contextBridge.exposeInMainWorld('api', {
     });
   },
   runPythonExecutable: (exeName, args, callback) => {
-    const exePath = path.joins(pythonDistPath, exeName);
+    const exePath = path.join(pythonDistPath, exeName);
     const subprocess = spawn(exePath, args);
     let output = '';
 
